@@ -12,6 +12,7 @@ interface MarkdownEditorProps {
 export default function MarkdownEditor({ value, onChange, placeholder }: MarkdownEditorProps) {
   return (
     <textarea
+      autoFocus
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
