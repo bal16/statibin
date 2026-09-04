@@ -33,14 +33,14 @@ export function CreatePage({ initialText }: { initialText: string }) {
   const preview = useMemo(() => <RenderedMarkdown text={text} small />, [text]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 p-4">
+    <div className="mx-auto space-y-4 p-4 max-w-6xl">
       <header>
         <h1 className="text-2xl font-bold">{strings.appTitle}</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">{strings.appTagline}</p>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
+      <main className="grid gap-4 md:grid-cols-2 ">
+        <section className="space-y-2">
           <MarkdownEditor value={text} onChange={setText} placeholder={strings.editorPlaceholder} />
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -60,13 +60,13 @@ export function CreatePage({ initialText }: { initialText: string }) {
               className="w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           )}
-        </div>
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
+        </section>
+        <section className="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
           {preview}
-        </div>
-      </div>
+        </section>
+      </main>
 
-      <div className="flex items-center justify-between">
+      <section className="flex items-center justify-between">
         <PayloadMeter textLength={text.length} urlLength={estimateLength(text, withPassword)} />
         <button
           onClick={onGenerate}
@@ -75,7 +75,7 @@ export function CreatePage({ initialText }: { initialText: string }) {
         >
           {strings.generateLink}
         </button>
-      </div>
+      </section>
 
       {link && <ShareCard link={link} />}
     </div>
