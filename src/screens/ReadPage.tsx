@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { strings } from "../strings";
 import { decodeRandom, decodeWithPassword, parseFragment } from "../lib/fragment";
-import { RenderedMarkdown } from "./RenderedMarkdown";
+import { RenderedMarkdown } from "../components/RenderedMarkdown";
 
 export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string) => void }) {
   const parsed = useMemo(() => parseFragment(hash), [hash]);

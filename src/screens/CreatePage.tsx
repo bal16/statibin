@@ -2,10 +2,10 @@ import { useCallback, useMemo, useState } from "react";
 import { strings } from "../strings";
 import { HARD_LIMIT } from "../lib/fragment";
 import { encodeRandom, encodeWithPassword } from "../lib/fragment";
-import MarkdownEditor from "./MarkdownEditor";
-import { RenderedMarkdown } from "./RenderedMarkdown";
-import { PayloadMeter } from "./PayloadMeter";
-import { ShareCard } from "./ShareCard";
+import MarkdownEditor from "../components/MarkdownEditor";
+import { RenderedMarkdown } from "../components/RenderedMarkdown";
+import { PayloadMeter } from "../components/PayloadMeter";
+import { ShareCard } from "../components/ShareCard";
 import { estimateLength } from "../lib/utils";
 
 export function CreatePage({ initialText }: { initialText: string }) {
