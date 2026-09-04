@@ -37,7 +37,7 @@
 
 ### 3.1 Pipeline
 
-```
+```text
 Input teks (Markdown string)
   → TextEncoder (UTF-8) → bytes
   → fflate deflate (sync) → bytes, dengan fallback ke bytes mentah
@@ -53,7 +53,7 @@ Catatan: envelope di-encode sebagai JSON lalu dienkripsi utuh, sehingga timestam
 
 ### 3.2 Format Fragment (dengan versioning)
 
-```
+```text
 Tanpa password: #v1.r.<key_b64url>.<iv_b64url>.<ciphertext_b64url>
 Dengan password: #v1.p.<salt_b64url>.<iv_b64url>.<ciphertext_b64url>
 ```
