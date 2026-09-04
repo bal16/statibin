@@ -1,0 +1,32 @@
+# Lefthook: fast git hooks, staged-files only.
+# Setup for a fresh clone: `bun install && bunx lefthook install`
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format staged files
+      run: bunx oxfmt --write {staged_files}
+      glob:
+        - "*.ts"
+        - "*.tsx"
+        - "*.css"
+        - "*.json"
+      stage_fixed: true
+
+    - name: lint staged files
+      run: bunx oxlint {staged_files}
+      glob:
+        - "*.ts"
+        - "*.tsx"
+
+    - name: typecheck
+      run: bunx tsc -b
+      # Mirrors the `build` script's type gate; ~2s, always blocking.
+
+pre-push:
+  jobs:
+    - name: unit tests
+      run: bun test
+
+    - name: build
+      run: bun run build
