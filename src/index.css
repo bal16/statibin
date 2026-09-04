@@ -1,1 +1,11 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* No custom dark variant: `dark:` follows the OS via
+   prefers-color-scheme. No toggle, no JS, no stored preference. */
+
+@layer base {
+  body {
+    @apply bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+  }
+}

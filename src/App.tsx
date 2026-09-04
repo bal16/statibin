@@ -38,7 +38,11 @@ function estimateLength(text: string, withPassword: boolean): number {
 function SizeIndicator({ text, withPassword }: { text: string; withPassword: boolean }) {
   const len = estimateLength(text, withPassword);
   const color =
-    len >= HARD_LIMIT ? "text-red-600" : len >= WARN_START ? "text-amber-600" : "text-gray-500";
+    len >= HARD_LIMIT
+      ? "text-red-600 dark:text-red-400"
+      : len >= WARN_START
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-gray-500 dark:text-gray-400";
   return (
     <div className={`text-xs ${color}`}>
       {strings.sizeUnit(len, HARD_LIMIT)}
@@ -103,7 +107,7 @@ function CreateView({ initialText }: { initialText: string }) {
 
   const preview = useMemo(
     () => (
-      <div className="prose prose-sm max-w-none">
+      <div className="prose prose-sm max-w-none dark:prose-invert">
         <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{text}</ReactMarkdown>
       </div>
     ),
@@ -114,7 +118,7 @@ function CreateView({ initialText }: { initialText: string }) {
     <div className="mx-auto max-w-6xl space-y-4 p-4">
       <header>
         <h1 className="text-2xl font-bold">{strings.appTitle}</h1>
-        <p className="text-sm text-gray-500">{strings.appTagline}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{strings.appTagline}</p>
       </header>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -135,11 +139,13 @@ function CreateView({ initialText }: { initialText: string }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={strings.passwordPlaceholder}
-              className="w-full rounded-md border border-gray-300 p-2 text-sm"
+              className="w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           )}
         </div>
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-3">{preview}</div>
+        <div className="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
+          {preview}
+        </div>
       </div>
 
       <div className="flex items-center justify-between">
@@ -154,21 +160,29 @@ function CreateView({ initialText }: { initialText: string }) {
       </div>
 
       {link && (
-        <div className="space-y-2 rounded-md border border-green-200 bg-green-50 p-3">
+        <div className="space-y-2 rounded-md border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950">
           <div className="flex gap-2">
-            <input readOnly value={link} className="w-full rounded border p-2 text-xs" />
+            <input
+              readOnly
+              value={link}
+              className="w-full rounded border border-gray-300 p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
             <button
               onClick={onCopy}
-              className="rounded-md bg-gray-800 px-3 py-2 text-xs text-white"
+              className="rounded-md bg-gray-800 px-3 py-2 text-xs text-white dark:bg-gray-200 dark:text-gray-900"
             >
               {copied ? strings.copied : strings.copy}
             </button>
           </div>
-          <p className="text-sm font-medium text-amber-700">{strings.lostLinkWarning}</p>
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+            {strings.lostLinkWarning}
+          </p>
           {link.length <= QR_LIMIT ? (
-            <QRCodeSVG value={link} size={160} />
+            <span className="inline-block rounded bg-white p-2">
+              <QRCodeSVG value={link} size={160} />
+            </span>
           ) : (
-            <p className="text-xs text-gray-500">{strings.qrTooLarge}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{strings.qrTooLarge}</p>
           )}
         </div>
       )}
@@ -215,7 +229,7 @@ function ViewPaste({ hash, onFork }: { hash: string; onFork: (text: string) => v
     }
   }, [hash, password]);
 
-  if (error) return <p className="p-8 text-center text-red-600">{error}</p>;
+  if (error) return <p className="p-8 text-center text-red-600 dark:text-red-400">{error}</p>;
   if (needsPassword && text === "") {
     return (
       <div className="mx-auto max-w-md space-y-2 p-8">
@@ -241,7 +255,7 @@ function ViewPaste({ hash, onFork }: { hash: string; onFork: (text: string) => v
   return (
     <div className="mx-auto max-w-3xl space-y-3 p-4">
       {createdAt && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           {strings.createdOn(
             createdAt.toLocaleDateString("en-US", {
               year: "numeric",
@@ -251,12 +265,12 @@ function ViewPaste({ hash, onFork }: { hash: string; onFork: (text: string) => v
           )}
         </p>
       )}
-      <div className="prose max-w-none">
+      <div className="prose max-w-none dark:prose-invert">
         <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{text}</ReactMarkdown>
       </div>
       <button
         onClick={() => onFork(text)}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600"
       >
         {strings.editAsNewPaste}
       </button>

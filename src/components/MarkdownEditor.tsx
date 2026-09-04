@@ -16,7 +16,7 @@ export default function MarkdownEditor({ value, onChange, placeholder }: Markdow
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       spellCheck={false}
-      className="h-64 w-full resize-y rounded-md border border-gray-300 bg-white p-3 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none md:h-96"
+      className="h-64 w-full resize-y rounded-md border border-gray-300 bg-white p-3 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none md:h-96 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
     />
   );
 }
