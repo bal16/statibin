@@ -42,28 +42,31 @@ Input teks (Markdown string)
   → TextEncoder (UTF-8) → bytes
   → fflate deflate (sync) → bytes, dengan fallback ke bytes mentah
     jika hasil compress >= input (flag c:0/1 di envelope)
-  → JSON envelope { c, t, d } → TextEncoder → bytes
-    (c = 1 compressed / 0 raw, t = unix epoch detik, d = payload)
+  → Binary envelope [flag:1B][epoch:4B][payload:N] (tanpa encoding teks)
   → AES-GCM 256-bit encrypt → bytes (iv + ciphertext)
-  → Base64URL encode (no padding)
+  → Base64URL encode sekali (no padding)
   → Susun ke URL fragment dengan version prefix
 ```
 
-Catatan: envelope di-encode sebagai JSON lalu dienkripsi utuh, sehingga timestamp tetap zero-knowledge.
+Catatan: envelope biner (v2) — payload disimpan mentah sehingga ciphertext
+adalah satu-satunya base64url round. Format v1 (JSON envelope dengan payload
+base64, didokumentasikan di `docs/v1/PRD.md`) membayar pajak base64url dua
+kali (`(4/3)² ≈ 1,78×`) dan tidak lagi di-decode (cutover bersih, app belum
+deploy saat migrasi).
 
 ### 3.2 Format Fragment (dengan versioning)
 
 ```text
-Tanpa password: #v1.r.<key_b64url>.<iv_b64url>.<ciphertext_b64url>
-Dengan password: #v1.p.<salt_b64url>.<iv_b64url>.<ciphertext_b64url>
+Tanpa password: #v2.r.<key_b64url>.<iv_b64url>.<ciphertext_b64url>
+Dengan password: #v2.p.<salt_b64url>.<iv_b64url>.<ciphertext_b64url>
 ```
 
-- `v1` — version tag, wajib ada sejak hari pertama. Parser wajib menolak unknown version dengan pesan ramah ("This link uses a newer format. Please update the app.") bukan crash.
+- `v2` — version tag. Parser menolak versi tak dikenal dengan pesan ramah ("This link uses a newer format. Please update the app.") bukan crash. Link `v1` (JSON envelope) ikut ditolak — cutover bersih, arsip spesifikasi di `docs/v1/PRD.md`.
 - `r` / `p` — flag mode (random key vs password-derived key)
 - Mode `r`: `key` = 256-bit random dari `crypto.getRandomValues`, disimpan di fragment (user tidak pernah mengetiknya). Format PRD awal yang hanya menulis `<iv>.<ciphertext>` tidak lengkap — tanpa key di URL, decrypt mustahil.
 - Mode `p`: key = Argon2id(password, salt); `salt` = 128-bit random dari `crypto.getRandomValues` per-paste.
 - Separator `.` aman karena tidak ada di alfabet Base64URL.
-- Ciphertext = AES-GCM atas byte JSON envelope `{"c":0|1,"t":epoch,"d":base64-or-text}`. Implementasi boleh menyimpan `d` sebagai base64 dari bytes (compressed/raw) agar JSON tetap valid UTF-8.
+- Ciphertext = AES-GCM atas byte envelope biner `[flag:1B][epoch:4B BE uint32][payload:N]` (flag 0 = raw, 1 = deflated; epoch detik, valid sampai 2106). Timestamp tetap zero-knowledge karena dienkripsi utuh.
 
 ### 3.3 Parameter Kunci
 
@@ -196,10 +199,11 @@ Seluruh bagian aplikasi lain (indikator ukuran payload, logic generate link, pre
 
 ## 9. Decision Log (keputusan yang sudah final)
 
-| Tanggal    | Keputusan                                 | Alasan                                                              |
-| ---------- | ----------------------------------------- | ------------------------------------------------------------------- |
-| 2026-09-04 | Kompresi `fflate`, bukan `lz-string`      | Binary-first cocok ke AES-GCM, rasio lebih baik, tetap sync + kecil |
-| 2026-09-04 | QR dibatasi ~2000 char                    | Keterbatasan fisik QR byte-mode; link besar tidak scannable         |
-| 2026-09-04 | UI English, PRD Indonesia                 | Target user global; string terpusat di `src/strings.ts`             |
-| 2026-09-04 | Hosting Vercel Static                     | HTTPS gratis, zero-config untuk SPA fragment-based                  |
-| 2026-09-04 | Format mode-`r` wajib sertakan key di URL | Tanpa key di fragment, decrypt mustahil — koreksi dari format awal  |
+| Tanggal    | Keputusan                                                                  | Alasan                                                                                                                                                                |
+| ---------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-04 | Kompresi `fflate`, bukan `lz-string`                                       | Binary-first cocok ke AES-GCM, rasio lebih baik, tetap sync + kecil                                                                                                   |
+| 2026-09-04 | QR dibatasi ~2000 char                                                     | Keterbatasan fisik QR byte-mode; link besar tidak scannable                                                                                                           |
+| 2026-09-04 | UI English, PRD Indonesia                                                  | Target user global; string terpusat di `src/strings.ts`                                                                                                               |
+| 2026-09-04 | Hosting Vercel Static                                                      | HTTPS gratis, zero-config untuk SPA fragment-based                                                                                                                    |
+| 2026-09-04 | Format mode-`r` wajib sertakan key di URL                                  | Tanpa key di fragment, decrypt mustahil — koreksi dari format awal                                                                                                    |
+| 2026-09-05 | Envelope v1 (JSON) → v2 (biner `[flag:1B][epoch:4B][payload]`), app v0.1.0 | Hilangkan pajak base64url ganda (`(4/3)²`); hemat ~25% ukuran URL. Cutover bersih tanpa parser legacy (arsip: `docs/v1/`, benchmark: `docs/compression-benchmark.md`) |
