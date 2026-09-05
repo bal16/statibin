@@ -10,5 +10,8 @@
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit"
+  },
+  "json.schemaDownload.trustedDomains": {
+    "https://openapi.vercel.sh/": true
   }
 }
