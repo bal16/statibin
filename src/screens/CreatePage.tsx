@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { strings } from "../strings";
-import { HARD_LIMIT } from "../lib/fragment";
+import { HARD_LIMIT, LARGE_PREVIEW_CUTOFF } from "../lib/fragment";
 import { encodeRandom, encodeWithPassword } from "../lib/fragment";
 import { MarkdownEditor } from "../components/MarkdownEditor";
 import { RenderedMarkdown } from "../components/RenderedMarkdown";
@@ -14,6 +14,9 @@ export function CreatePage({ initialText }: { initialText: string }) {
   const [password, setPassword] = useState("");
   const [link, setLink] = useState("");
   const [busy, setBusy] = useState(false);
+  // Snapshot of the text the user explicitly allowed to render above the
+  // preview cutoff. Compared by reference: any edit re-gates the preview.
+  const [previewOverride, setPreviewOverride] = useState("");
 
   const estLen = estimateLength(text, withPassword);
   const canGenerate = text.length > 0 && estLen <= HARD_LIMIT && !busy;
@@ -35,6 +38,10 @@ export function CreatePage({ initialText }: { initialText: string }) {
   }, [text, withPassword, password]);
 
   const preview = useMemo(() => <RenderedMarkdown text={text} small />, [text]);
+  // Anti-freeze: rendering megabytes of Markdown on every keystroke locks
+  // the tab. Above the cutoff the preview stays gated until the user opts
+  // in per current text (any edit re-gates automatically).
+  const previewGated = text.length > LARGE_PREVIEW_CUTOFF && previewOverride !== text;
 
   return (
     <div className="mx-auto space-y-4 p-4 max-w-6xl">
@@ -68,7 +75,19 @@ export function CreatePage({ initialText }: { initialText: string }) {
       <main className="grid gap-4 md:grid-cols-2 ">
         <MarkdownEditor value={text} onChange={setText} placeholder={strings.editorPlaceholder} />
         <section className="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900 max-h-112 overflow-auto">
-          {preview}
+          {previewGated ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {strings.previewDisabledLarge}{" "}
+              <button
+                onClick={() => setPreviewOverride(text)}
+                className="underline text-blue-600 dark:text-blue-400"
+              >
+                {strings.renderAnyway}
+              </button>
+            </p>
+          ) : (
+            preview
+          )}
         </section>
       </main>
 

@@ -67,6 +67,29 @@ describe("fragment pipeline", () => {
     const decoded = await decodeRandom(await encodeRandom(""));
     expect(decoded.text).toBe("");
   });
+
+  test("large compressible paste round-trips end to end", async () => {
+    const text = "# Big\n\nRow of **markdown** content halo 🎉\n\n".repeat(5000);
+    expect(text.length).toBeGreaterThan(200_000);
+    const decoded = await decodeRandom(await encodeRandom(text));
+    expect(decoded.text).toBe(text);
+  });
+
+  test("large high-entropy paste exceeds the URL hard limit but still round-trips", async () => {
+    const random = new Uint8Array(96 * 1024);
+    crypto.getRandomValues(random);
+    let bin = "";
+    for (let i = 0; i < random.length; i += 0x8000) {
+      bin += String.fromCharCode(...random.subarray(i, i + 0x8000));
+    }
+    const text = btoa(bin); // ~128K chars of base64 noise
+    const frag = await encodeRandom(text);
+    // incompressible at this size: the fragment itself blows past 8K chars,
+    // which is exactly what the hard block in the UI must catch
+    expect(frag.length).toBeGreaterThan(8000);
+    const decoded = await decodeRandom(frag);
+    expect(decoded.text).toBe(text);
+  });
 });
 
 describe("parseFragment", () => {
