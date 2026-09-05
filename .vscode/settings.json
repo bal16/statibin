@@ -12,6 +12,7 @@
     "source.fixAll.oxc": "explicit"
   },
   "json.schemaDownload.trustedDomains": {
-    "https://openapi.vercel.sh/": true
+    "https://openapi.vercel.sh/": true,
+    "https://www.schemastore.org/": true
   }
 }
