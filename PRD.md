@@ -191,7 +191,7 @@ Seluruh bagian aplikasi lain (indikator ukuran payload, logic generate link, pre
 
 - Output `dist/` Vite di-deploy apa adanya sebagai static site; tidak ada SSR, functions, atau rewrite (path selalu `/`, data di `#fragment` tidak pernah dikirim ke server).
 - Wajib HTTPS (default Vercel) — tanpa ini `crypto.subtle` dan `clipboard` diblokir browser; tidak ada fallback HTTP.
-- Header CSP yang disarankan: `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'` (sesuaikan setelah audit Tailwind/QR).
+- Header CSP yang disarankan: `default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'` (sesuaikan setelah audit Tailwind/QR). `wasm-unsafe-eval` wajib ada — `hash-wasm` meng-compile WASM via `WebAssembly.compile`, yang diblokir `script-src 'self'` polos (tanpanya generate link password gagal hanya di production, bukan di localhost).
 - Tidak perlu header `COOP`/`COEP` (hanya dibutuhkan jika Argon2 multi-thread — sengaja tidak dipakai di MVP).
 - Jika Vercel Analytics / Speed Insights dinyalakan: verifikasi fragment tidak ikut ter-log.
 
