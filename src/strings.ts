@@ -15,6 +15,7 @@ export const strings = {
   copy: "Copy",
   copied: "Copied!",
   showQrCode: "Show QR Code",
+  close: "Close",
   editAsNewPaste: "✏️ Edit as new paste",
   renderAnyway: "Render anyway",
 
