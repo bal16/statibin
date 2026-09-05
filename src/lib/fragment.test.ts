@@ -15,7 +15,7 @@ describe("fragment pipeline", () => {
   test("random mode round-trips text + timestamp", async () => {
     const before = Date.now();
     const frag = await encodeRandom(SAMPLE);
-    expect(frag.startsWith("#v1.r.")).toBe(true);
+    expect(frag.startsWith("#v2.r.")).toBe(true);
 
     const parsed = parseFragment(frag);
     expect(parsed.ok).toBe(true);
@@ -29,7 +29,7 @@ describe("fragment pipeline", () => {
 
   test("password mode round-trips with correct password", async () => {
     const frag = await encodeWithPassword(SAMPLE, "s3cret!");
-    expect(frag.startsWith("#v1.p.")).toBe(true);
+    expect(frag.startsWith("#v2.p.")).toBe(true);
 
     const decoded = await decodeWithPassword(frag, "s3cret!");
     expect(decoded.mode).toBe("p");
@@ -50,9 +50,10 @@ describe("fragment pipeline", () => {
   test("rejects an authenticated fragment with a corrupted envelope", async () => {
     const key = newRandomBytes(32);
     const iv = newRandomBytes(12);
-    const envelope = new TextEncoder().encode(JSON.stringify({ c: 2, t: 0, d: "" }));
+    // binary envelope with an illegal flag byte (valid: 0 raw, 1 deflated)
+    const envelope = new Uint8Array([2, 0, 0, 0, 0]);
     const ciphertext = await aesGcmEncrypt(key, iv, envelope);
-    const frag = `#v1.r.${bytesToBase64Url(key)}.${bytesToBase64Url(iv)}.${bytesToBase64Url(ciphertext)}`;
+    const frag = `#v2.r.${bytesToBase64Url(key)}.${bytesToBase64Url(iv)}.${bytesToBase64Url(ciphertext)}`;
 
     await expect(decodeRandom(frag)).rejects.toThrow("corrupted");
   });
@@ -102,11 +103,18 @@ describe("parseFragment", () => {
     expect(parseFragment("#v9.r.a.b.c")).toEqual({ ok: false, reason: "newer-format" });
   });
 
+  test("rejects retired v1 links (no legacy parser kept)", async () => {
+    // Clean cutover: the app was undeployed with no v1 links in the wild,
+    // so v1 is rejected like any other unknown version. See docs/v1/.
+    expect(parseFragment("#v1.r.a.b.c")).toEqual({ ok: false, reason: "newer-format" });
+    await expect(decodeRandom("#v1.r.a.b.c")).rejects.toThrow();
+  });
+
   test("rejects unknown mode as incomplete", () => {
-    expect(parseFragment("#v1.x.a.b.c")).toEqual({ ok: false, reason: "incomplete" });
+    expect(parseFragment("#v2.x.a.b.c")).toEqual({ ok: false, reason: "incomplete" });
   });
 
   test("rejects invalid base64url fields as incomplete", () => {
-    expect(parseFragment("#v1.r.%.a.b")).toEqual({ ok: false, reason: "incomplete" });
+    expect(parseFragment("#v2.r.%.a.b")).toEqual({ ok: false, reason: "incomplete" });
   });
 });

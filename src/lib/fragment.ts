@@ -1,18 +1,24 @@
 // URL fragment envelope + encode/decode pipeline (PRD §3).
 //
 // Formats:
-//   random mode:   #v1.r.<key_b64u>.<iv_b64u>.<ciphertext_b64u>
-//   password mode: #v1.p.<salt_b64u>.<iv_b64u>.<ciphertext_b64u>
+//   random mode:   #v2.r.<key_b64u>.<iv_b64u>.<ciphertext_b64u>
+//   password mode: #v2.p.<salt_b64u>.<iv_b64u>.<ciphertext_b64u>
 //
-// Ciphertext = AES-GCM over UTF-8 bytes of JSON envelope:
-//   { "c": 0|1, "t": <unix epoch seconds>, "d": <base64url payload> }
+// Ciphertext = AES-GCM over a BINARY envelope (v2, single base64url round):
+//   [flag:1B][epoch:4B BE uint32][payload:N B]
+//   flag 0 = raw bytes, 1 = fflate-deflated bytes (payload stored raw so the
+//   ciphertext is the only base64url encoding — v1 paid the tax twice via
+//   a JSON envelope with a base64 payload).
+//
+// v1 links (JSON envelope) are NOT decodable by this version; the app was
+// undeployed with no v1 links in the wild, so no legacy parser is kept.
 
 import { base64UrlToBytes, bytesToBase64Url } from "./codec";
 import { decodeText, encodeText } from "./compress";
 import { aesGcmDecrypt, aesGcmEncrypt, newRandomBytes } from "./crypto";
 import { deriveKey, SALT_BYTES } from "./password";
 
-export const FRAGMENT_VERSION = "v1";
+export const FRAGMENT_VERSION = "v2";
 export const SOFT_LIMIT = 4000;
 export const WARN_START = 3200;
 export const HARD_LIMIT = 8000;
@@ -27,33 +33,35 @@ export interface DecodedPaste {
   createdAt: Date;
 }
 
-interface Envelope {
-  c: 0 | 1;
-  t: number;
-  d: string;
-}
+/** Fixed binary envelope header: 1 flag byte + 4 epoch bytes. */
+export const ENVELOPE_HEADER_BYTES = 5;
 
-const te = new TextEncoder();
-const td = new TextDecoder();
+const FLAG_RAW = 0;
+const FLAG_DEFLATED = 1;
 
 function buildEnvelope(text: string): Uint8Array {
   const { compressed, dataB64u } = encodeText(text);
-  const env: Envelope = {
-    c: compressed,
-    t: Math.floor(Date.now() / 1000),
-    d: dataB64u,
-  };
-  return te.encode(JSON.stringify(env));
+  const payload = base64UrlToBytes(dataB64u);
+  const out = new Uint8Array(ENVELOPE_HEADER_BYTES + payload.length);
+  const view = new DataView(out.buffer);
+  out[0] = compressed === 1 ? FLAG_DEFLATED : FLAG_RAW;
+  view.setUint32(1, Math.floor(Date.now() / 1000));
+  out.set(payload, ENVELOPE_HEADER_BYTES);
+  return out;
 }
 
 function openEnvelope(plain: Uint8Array): { text: string; createdAt: Date } {
-  const env = JSON.parse(td.decode(plain)) as Envelope;
-  if ((env.c !== 0 && env.c !== 1) || typeof env.t !== "number" || typeof env.d !== "string") {
-    throw new Error("corrupted");
-  }
+  if (plain.length < ENVELOPE_HEADER_BYTES) throw new Error("corrupted");
+  const flag = plain[0];
+  if (flag !== FLAG_RAW && flag !== FLAG_DEFLATED) throw new Error("corrupted");
+  const epoch = new DataView(plain.buffer, plain.byteOffset, plain.byteLength).getUint32(1);
+  const payload = plain.subarray(ENVELOPE_HEADER_BYTES);
   return {
-    text: decodeText({ compressed: env.c, dataB64u: env.d }),
-    createdAt: new Date(env.t * 1000),
+    text: decodeText({
+      compressed: flag as 0 | 1,
+      dataB64u: bytesToBase64Url(payload),
+    }),
+    createdAt: new Date(epoch * 1000),
   };
 }
 
