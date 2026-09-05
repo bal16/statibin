@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { strings } from "../strings";
-import { decodeRandom, decodeWithPassword, parseFragment } from "../lib/fragment";
+import { decodeRandom, decodeWithPassword, KDF_FAILED, parseFragment } from "../lib/fragment";
 import { RenderedMarkdown } from "../components/RenderedMarkdown";
 
 export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string) => void }) {
@@ -37,8 +37,12 @@ export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string
       setText(d.text);
       setCreatedAt(d.createdAt);
       setError("");
-    } catch {
-      setError(strings.errWrongPasswordOrCorrupted);
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message === KDF_FAILED
+          ? strings.errPasswordCheckFailed
+          : strings.errWrongPasswordOrCorrupted,
+      );
     }
   }, [hash, password]);
 

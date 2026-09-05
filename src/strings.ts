@@ -33,4 +33,6 @@ export const strings = {
   errIncompleteLink: "This link looks incomplete or corrupted.",
   errNewerFormat: "This link uses a newer format. Please update the app.",
   errWrongPasswordOrCorrupted: "Wrong password or corrupted link.",
+  errPasswordCheckFailed:
+    "Could not run the password check on this device or browser. Try a different browser.",
 } as const;

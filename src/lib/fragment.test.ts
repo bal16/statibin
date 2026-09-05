@@ -4,6 +4,7 @@ import {
   decodeWithPassword,
   encodeRandom,
   encodeWithPassword,
+  KDF_FAILED,
   parseFragment,
 } from "./fragment";
 import { bytesToBase64Url } from "./codec";
@@ -39,6 +40,13 @@ describe("fragment pipeline", () => {
   test("password mode rejects wrong password", async () => {
     const frag = await encodeWithPassword(SAMPLE, "s3cret!");
     await expect(decodeWithPassword(frag, "wrong")).rejects.toThrow();
+  });
+
+  test("wrong password fails auth, never misreported as KDF failure", async () => {
+    const frag = await encodeWithPassword(SAMPLE, "s3cret!");
+    const err = await decodeWithPassword(frag, "wrong").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).not.toBe(KDF_FAILED);
   });
 
   test("tampered fragment fails to decode", async () => {

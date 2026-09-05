@@ -110,7 +110,7 @@ Panjang dihitung dari **karakter URL final** (bukan KB plaintext). Indikator men
 - [ ] **Timestamp cosmetic** — tanggal dibuat, di-embed dalam envelope terenkripsi (bukan metadata terpisah, supaya tetap zero-knowledge), ditampilkan setelah decrypt (format English, misal `Created on Sep 4, 2026`)
 - [ ] **QR Code share** — generate QR dari link hanya jika total URL ≤ ~2000 karakter; di atas itu tombol disabled dengan penjelasan (lihat §3.4)
 - [ ] **Fork/Edit** — tombol eksplisit "✏️ Edit as new paste" saat melihat paste hasil buka link. Men-decrypt isi ke textarea baru (state terpisah), generate **link baru** saat disimpan. Link asli tidak berubah/tidak terpengaruh.
-- [ ] **Error states ramah** — link terpotong/rusak: "This link looks incomplete or corrupted."; versi tak dikenal: "This link uses a newer format."; gagal auth (password salah ATAU link rusak — keduanya tidak bisa dibedakan di AES-GCM): "Wrong password or corrupted link."
+- [ ] **Error states ramah** — link terpotong/rusak: "This link looks incomplete or corrupted."; versi tak dikenal: "This link uses a newer format."; gagal auth (password salah ATAU link rusak — keduanya tidak bisa dibedakan di AES-GCM): "Wrong password or corrupted link."; KDF gagal jalan (WASM diblokir browser/CSP, OOM) wajib pesan beda: "Could not run the password check on this device or browser. Try a different browser." — jangan pernah menyalahkan password user atas masalah device/browser.
 
 ### Tidak Termasuk MVP v1 (ditunda / out of scope)
 

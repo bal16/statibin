@@ -19,6 +19,10 @@ import { aesGcmDecrypt, aesGcmEncrypt, newRandomBytes } from "./crypto";
 import { deriveKey, SALT_BYTES } from "./password";
 
 export const FRAGMENT_VERSION = "v2";
+
+/** Thrown by decodeWithPassword when Argon2id itself fails (WASM blocked,
+ *  OOM) — distinct from wrong-password/corrupted-link auth failures. */
+export const KDF_FAILED = "kdf-failed";
 export const SOFT_LIMIT = 4000;
 export const WARN_START = 3200;
 export const HARD_LIMIT = 8000;
@@ -121,7 +125,15 @@ export async function decodeRandom(hash: string): Promise<DecodedPaste> {
 export async function decodeWithPassword(hash: string, password: string): Promise<DecodedPaste> {
   const parsed = parseFragment(hash);
   if (!parsed.ok || parsed.mode !== "p") throw new Error(parsed.ok ? "corrupted" : parsed.reason);
-  const key = await deriveKey(password, parsed.keyOrSalt);
+  // KDF failures (WASM blocked by browser/CSP, OOM on low-end devices) are
+  // infrastructure errors, NOT wrong passwords — surface them distinctly so
+  // the UI never blames the user's password for a device/browser problem.
+  let key: Uint8Array;
+  try {
+    key = await deriveKey(password, parsed.keyOrSalt);
+  } catch {
+    throw new Error(KDF_FAILED);
+  }
   try {
     const plain = await aesGcmDecrypt(key, parsed.iv, parsed.ciphertext);
     const { text, createdAt } = openEnvelope(plain);
