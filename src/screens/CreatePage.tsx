@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { strings } from "../strings";
 import { HARD_LIMIT } from "../lib/fragment";
 import { encodeRandom, encodeWithPassword } from "../lib/fragment";
-import MarkdownEditor from "../components/MarkdownEditor";
+import { MarkdownEditor } from "../components/MarkdownEditor";
 import { RenderedMarkdown } from "../components/RenderedMarkdown";
 import { PayloadMeter } from "../components/PayloadMeter";
 import { ShareCard } from "../components/ShareCard";

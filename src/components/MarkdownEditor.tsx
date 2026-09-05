@@ -9,7 +9,7 @@ interface MarkdownEditorProps {
   placeholder?: string;
 }
 
-export default function MarkdownEditor({ value, onChange, placeholder }: MarkdownEditorProps) {
+export function MarkdownEditor({ value, onChange, placeholder }: MarkdownEditorProps) {
   return (
     <textarea
       autoFocus
