@@ -6,6 +6,8 @@ import {
   encodeWithPassword,
   parseFragment,
 } from "./fragment";
+import { bytesToBase64Url } from "./codec";
+import { aesGcmEncrypt, newRandomBytes } from "./crypto";
 
 const SAMPLE = "# Hello\n\nSome **markdown**: halo dunia 🎉";
 
@@ -45,6 +47,16 @@ describe("fragment pipeline", () => {
     await expect(decodeRandom(tampered)).rejects.toThrow();
   });
 
+  test("rejects an authenticated fragment with a corrupted envelope", async () => {
+    const key = newRandomBytes(32);
+    const iv = newRandomBytes(12);
+    const envelope = new TextEncoder().encode(JSON.stringify({ c: 2, t: 0, d: "" }));
+    const ciphertext = await aesGcmEncrypt(key, iv, envelope);
+    const frag = `#v1.r.${bytesToBase64Url(key)}.${bytesToBase64Url(iv)}.${bytesToBase64Url(ciphertext)}`;
+
+    await expect(decodeRandom(frag)).rejects.toThrow("corrupted");
+  });
+
   test("every encryption uses a fresh key/IV (no reuse)", async () => {
     const a = await encodeRandom(SAMPLE);
     const b = await encodeRandom(SAMPLE);
@@ -69,5 +81,9 @@ describe("parseFragment", () => {
 
   test("rejects unknown mode as incomplete", () => {
     expect(parseFragment("#v1.x.a.b.c")).toEqual({ ok: false, reason: "incomplete" });
+  });
+
+  test("rejects invalid base64url fields as incomplete", () => {
+    expect(parseFragment("#v1.r.%.a.b")).toEqual({ ok: false, reason: "incomplete" });
   });
 });
