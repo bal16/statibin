@@ -5,18 +5,18 @@ import { estimateLength } from "./utils";
 
 describe("estimateLength", () => {
   test("empty text hits the fixed fragment overhead exactly", () => {
-    // #v1.r.(6) + key 32B (43) + sep (1) + iv 12B (16) + sep (1)
-    // + envelope ~30B + GCM tag 16B as base64url (64)
-    expect(estimateLength("", false)).toBe(131);
+    // #v2.r.(6) + key 32B (43) + sep (1) + iv 12B (16) + sep (1)
+    // + envelope 5B + GCM tag 16B as base64url (28)
+    expect(estimateLength("", false)).toBe(95);
     // password mode swaps the 43-char key for a 22-char salt
-    expect(estimateLength("", true)).toBe(110);
+    expect(estimateLength("", true)).toBe(74);
   });
 
   test("grows monotonically with input size", () => {
     const a = estimateLength("hello", false);
     const b = estimateLength("hello world, this is longer", false);
     expect(b).toBeGreaterThan(a);
-    expect(a).toBeGreaterThan(131);
+    expect(a).toBeGreaterThan(estimateLength("", false));
   });
 
   test("never underestimates the real random-mode fragment", async () => {
@@ -26,7 +26,8 @@ describe("estimateLength", () => {
       const actual = await encodeRandom(text);
       const est = estimateLength(text, false);
       expect(est).toBeGreaterThanOrEqual(actual.length);
-      // ...but not absurdly over: envelope overhead is ~30 chars by design
+      // ...but not absurdly over: envelope overhead is ~5 bytes by design
+      // plus base64url rounding (≤4 chars per encoding step)
       expect(est - actual.length).toBeLessThanOrEqual(8);
     }
   });
