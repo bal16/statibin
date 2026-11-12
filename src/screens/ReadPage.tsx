@@ -46,33 +46,61 @@ export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string
     }
   }, [hash, password]);
 
-  if (error) return <p className="p-8 text-center text-red-600 dark:text-red-400">{error}</p>;
-  if (needsPassword && text === "") {
+  if (error) {
     return (
-      <div className="mx-auto max-w-md space-y-2 p-8">
-        <input
-          type="password"
-          autoComplete="off"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder={strings.passwordPlaceholder}
-          className="w-full rounded-md border border-gray-300 p-2 text-sm"
-        />
-        <button
-          onClick={onUnlock}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm text-white"
-        >
-          {strings.unlock}
-        </button>
-      </div>
+      <main className="enter mx-auto max-w-xl space-y-2 px-4 py-16">
+        <h1 className="text-2xl font-medium tracking-tight">{strings.errTitle}</h1>
+        <p className="text-muted">{error}</p>
+      </main>
     );
   }
-  if (text === null) return <p className="p-8 text-center">…</p>;
+
+  if (needsPassword && text === "") {
+    return (
+      <main className="enter mx-auto max-w-md space-y-4 px-4 py-16">
+        <header className="space-y-1">
+          <h1 className="text-2xl font-medium tracking-tight">{strings.unlockTitle}</h1>
+          <p className="text-sm text-muted">{strings.unlockHint}</p>
+        </header>
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onUnlock();
+          }}
+        >
+          <label className="block space-y-1">
+            <span className="text-sm font-medium">{strings.passwordLabel}</span>
+            <input
+              type="password"
+              autoComplete="off"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="field w-full"
+              aria-invalid={!!error}
+            />
+            {error && <p className="text-sm text-danger">{error}</p>}
+          </label>
+          <button type="submit" className="btn btn-solid w-full">
+            {strings.unlock}
+          </button>
+        </form>
+      </main>
+    );
+  }
+
+  if (text === null) {
+    return (
+      <main role="status" className="p-16 text-center text-muted">
+        {strings.decrypting}
+      </main>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-3 p-4">
+    <main className="mx-auto max-w-3xl space-y-4 px-4 py-6">
       {createdAt && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-muted">
           {strings.createdOn(
             createdAt.toLocaleDateString("en-US", {
               year: "numeric",
@@ -83,12 +111,9 @@ export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string
         </p>
       )}
       <RenderedMarkdown text={text} />
-      <button
-        onClick={() => onFork(text)}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600"
-      >
+      <button onClick={() => onFork(text)} className="btn btn-outline">
         {strings.editAsNewPaste}
       </button>
-    </div>
+    </main>
   );
 }
