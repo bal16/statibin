@@ -1,12 +1,13 @@
 /* Minimal custom highlight.js theme (light) for rehype-highlight output.
    No highlight.js dependency — only the token classes it emits are styled.
    Loaded after index.css so it wins over @tailwindcss/typography `pre`.
-   Dark mode follows the OS via prefers-color-scheme (no JS toggle). */
+   The frame reads the app tokens; syntax hues are GitHub-ish, OS-driven
+   dark block below. */
 
 .prose pre {
-  background-color: #f6f8fa;
-  color: #1f2328;
-  border: 1px solid #d0d7de;
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
   overflow-x: auto;
 }
 
@@ -77,15 +78,10 @@
   font-weight: 700;
 }
 
-/* Dark companions (github-dark-ish hues), OS-driven. */
+/* Dark companions (github-dark-ish hues), OS-driven. The pre frame already
+   flips via tokens; only the hues below need a dark block. */
 
 @media (prefers-color-scheme: dark) {
-  .prose pre {
-    background-color: #0d1117;
-    color: #e6edf3;
-    border-color: #30363d;
-  }
-
   .hljs-comment,
   .hljs-quote {
     color: #8b949e;
