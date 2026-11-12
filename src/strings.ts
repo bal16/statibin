@@ -6,6 +6,8 @@ export const strings = {
   appTagline: "Serverless pastebin — the URL is the database.",
 
   editorPlaceholder: "Paste your Markdown here",
+  editorLabel: "Markdown",
+  previewLabel: "Preview",
   preview: "Preview",
   edit: "Edit",
   protectWithPassword: "Protect with password",
