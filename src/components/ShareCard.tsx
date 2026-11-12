@@ -37,29 +37,20 @@ export function ShareCard({ link }: { link: string }) {
   }, [link]);
 
   return (
-    <div className="space-y-2 rounded-md border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950">
+    <div className="app-frame p-3">
       <div className="flex gap-2">
-        <input
-          readOnly
-          value={link}
-          className="w-full rounded border border-gray-300 p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-        />
-        <button
-          onClick={onCopy}
-          className="rounded-md bg-gray-800 px-3 py-2 text-xs text-white dark:bg-gray-200 dark:text-gray-900"
-        >
+        <input readOnly value={link} className="field w-full min-w-0 font-mono text-xs" />
+        <button onClick={onCopy} className="btn btn-solid shrink-0 px-3 text-xs">
           {copied ? strings.copied : strings.copy}
         </button>
       </div>
-      <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-        {strings.lostLinkWarning}
-      </p>
+      <p className="mt-2 text-sm font-medium text-warn">{strings.lostLinkWarning}</p>
       {link.length <= QR_LIMIT ? (
-        <div>
+        <div className="mt-3">
           <button
             ref={triggerRef}
             onClick={() => setQrOpen(true)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-xs dark:border-gray-600"
+            className="btn btn-outline px-3 text-xs"
           >
             {strings.showQrCode}
           </button>
@@ -75,12 +66,12 @@ export function ShareCard({ link }: { link: string }) {
                 onClick={() => setQrOpen(false)}
                 className="absolute inset-0 cursor-default bg-black/60"
               />
-              <div className="relative space-y-3 rounded-lg bg-white p-4 text-center">
+              <div className="relative space-y-3 bg-surface p-4 text-center text-ink">
                 <QRCodeSVG value={link} size={192} />
                 <button
                   ref={closeRef}
                   onClick={() => setQrOpen(false)}
-                  className="w-full rounded-md bg-gray-800 px-3 py-2 text-xs text-white"
+                  className="btn btn-solid w-full"
                 >
                   {strings.close}
                 </button>
@@ -89,7 +80,7 @@ export function ShareCard({ link }: { link: string }) {
           )}
         </div>
       ) : (
-        <p className="text-xs text-gray-500 dark:text-gray-400">{strings.qrTooLarge}</p>
+        <p className="mt-3 text-xs text-muted">{strings.qrTooLarge}</p>
       )}
     </div>
   );
