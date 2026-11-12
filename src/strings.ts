@@ -4,6 +4,8 @@
 export const strings = {
   appTitle: "Statibin",
   appTagline: "Serverless pastebin — the URL is the database.",
+  // One hard fact on the first screen (HARD_LIMIT is 8000, keep in sync).
+  hardFact: "One link holds up to 8,000 encrypted characters — the server never sees them.",
 
   editorPlaceholder: "Paste your Markdown here",
   editorLabel: "Markdown",
