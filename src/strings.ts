@@ -5,7 +5,7 @@ export const strings = {
   appTitle: "Statibin",
   appTagline: "Serverless pastebin — the URL is the database.",
 
-  editorPlaceholder: "Paste your Markdown here...",
+  editorPlaceholder: "Paste your Markdown here",
   preview: "Preview",
   edit: "Edit",
   protectWithPassword: "Protect with password",
@@ -16,7 +16,7 @@ export const strings = {
   copied: "Copied!",
   showQrCode: "Show QR Code",
   close: "Close",
-  editAsNewPaste: "✏️ Edit as new paste",
+  editAsNewPaste: "Edit as new paste",
   renderAnyway: "Render anyway",
 
   sizeUnit: (used: number, limit: number) =>
@@ -27,7 +27,7 @@ export const strings = {
   qrTooLarge: "Too large for QR code — copy the link instead.",
   previewDisabledLarge: "Preview disabled for very large pastes —",
 
-  lostLinkWarning: "⚠️ This link cannot be recovered if lost. Store it safely.",
+  lostLinkWarning: "This link cannot be recovered if lost. Store it safely.",
   createdOn: (date: string) => `Created on ${date}`,
 
   errIncompleteLink: "This link looks incomplete or corrupted.",
