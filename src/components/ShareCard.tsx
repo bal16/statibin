@@ -1,5 +1,6 @@
 import { strings } from "../strings";
-import { QRCodeSVG } from "qrcode.react";
+import { Suspense, lazy } from "react";
+const QRCodeSVG = lazy(() => import("qrcode.react").then((m) => ({ default: m.QRCodeSVG })));
 import { QR_LIMIT } from "../lib/fragment";
 import { copyToClipboard } from "../lib/clipboard";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -66,8 +67,15 @@ export function ShareCard({ link }: { link: string }) {
                 onClick={() => setQrOpen(false)}
                 className="absolute inset-0 cursor-default bg-black/60"
               />
-              <div className="relative space-y-3 bg-surface p-4 text-center text-ink">
-                <QRCodeSVG value={link} size={192} />
+              <div className="relative w-64 space-y-3 border border-line bg-surface p-4 text-center shadow-2xl">
+                {/* The QR stays black-on-white in both schemes: cameras and
+                    scanners need the contrast; the white tile also keeps the
+                    quiet zone around the modules. */}
+                <div className="mx-auto w-fit bg-white p-2">
+                  <Suspense fallback={null}>
+                    <QRCodeSVG value={link} size={192} />
+                  </Suspense>
+                </div>
                 <button
                   ref={closeRef}
                   onClick={() => setQrOpen(false)}
