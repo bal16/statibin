@@ -1,9 +1,11 @@
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { strings } from "../strings";
-import { Suspense, lazy } from "react";
-const QRCodeSVG = lazy(() => import("qrcode.react").then((m) => ({ default: m.QRCodeSVG })));
 import { QR_LIMIT } from "../lib/fragment";
 import { copyToClipboard } from "../lib/clipboard";
-import { useCallback, useEffect, useRef, useState } from "react";
+
+// QR generation is only needed once a link exists and the user opens the
+// dialog, so keep the encoder out of the initial bundle.
+const QRCodeSVG = lazy(() => import("qrcode.react").then((m) => ({ default: m.QRCodeSVG })));
 
 export function ShareCard({ link }: { link: string }) {
   const [copied, setCopied] = useState(false);
