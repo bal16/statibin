@@ -1,57 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { strings } from "../shared/constants/strings";
-import {
-  decodeRandom,
-  decodeWithPassword,
-  KDF_FAILED,
-  parseFragment,
-} from "../features/bin/lib/fragment";
+import { useBinReader } from "../features/bin/hooks/useBinReader";
 import { RenderedMarkdown } from "../features/bin/components/RenderedMarkdown";
 
 export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string) => void }) {
-  const parsed = useMemo(() => parseFragment(hash), [hash]);
-  const needsPassword = parsed.ok && parsed.mode === "p";
+  const { status, text, createdAt, error, unlock } = useBinReader(hash);
   const [password, setPassword] = useState("");
-  const [text, setText] = useState<string | null>(parsed.ok && !needsPassword ? null : "");
-  const [createdAt, setCreatedAt] = useState<Date | null>(null);
-  const [error, setError] = useState("");
-
-  /* eslint-disable react/set-state-in-effect -- async decrypt on hash change
-     is external work, not derivable during render. */
-  useEffect(() => {
-    if (!parsed.ok) {
-      setError(
-        parsed.reason === "newer-format" ? strings.errNewerFormat : strings.errIncompleteLink,
-      );
-      return;
-    }
-    if (parsed.mode === "r") {
-      decodeRandom(hash)
-        .then((d) => {
-          setText(d.text);
-          setCreatedAt(d.createdAt);
-        })
-        .catch(() => setError(strings.errIncompleteLink));
-    }
-  }, [hash, parsed]);
-  /* eslint-enable react/set-state-in-effect */
 
   const onUnlock = useCallback(async () => {
-    try {
-      const d = await decodeWithPassword(hash, password);
-      setText(d.text);
-      setCreatedAt(d.createdAt);
-      setError("");
-    } catch (e) {
-      setError(
-        e instanceof Error && e.message === KDF_FAILED
-          ? strings.errPasswordCheckFailed
-          : strings.errWrongPasswordOrCorrupted,
-      );
-    }
-  }, [hash, password]);
+    await unlock(password);
+  }, [unlock, password]);
 
-  if (error) {
+  if (status === "error") {
     return (
       <main className="enter mx-auto max-w-xl space-y-2 px-4 py-16">
         <h1 className="text-2xl font-medium tracking-tight">{strings.errTitle}</h1>
@@ -60,7 +20,7 @@ export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string
     );
   }
 
-  if (needsPassword && text === "") {
+  if (status === "locked") {
     return (
       <main className="enter mx-auto max-w-md space-y-4 px-4 py-16">
         <header className="space-y-1">
@@ -94,7 +54,7 @@ export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string
     );
   }
 
-  if (text === null) {
+  if (status === "loading") {
     return (
       <main role="status" className="p-16 text-center text-muted">
         {strings.decrypting}
