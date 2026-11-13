@@ -44,4 +44,5 @@ export const strings = {
   errWrongPasswordOrCorrupted: "Wrong password or corrupted link.",
   errPasswordCheckFailed:
     "Could not run the password check on this device or browser. Try a different browser.",
+  errGenerateFailed: "Could not generate the link. Please try again.",
 } as const;

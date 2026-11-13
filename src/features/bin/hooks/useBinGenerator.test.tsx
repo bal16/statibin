@@ -73,6 +73,7 @@ describe("useBinGenerator", () => {
 
     expect(current.link.startsWith("https://statibin.test/create#v2.r.")).toBe(true);
     expect(current.busy).toBe(false);
+    expect(current.error).toBe("");
   });
 
   test("a password selects password mode", async () => {
@@ -83,5 +84,29 @@ describe("useBinGenerator", () => {
 
     expect(current.link.startsWith("https://statibin.test/create#v2.p.")).toBe(true);
     expect(current.busy).toBe(false);
+  });
+
+  test("surfaces encode failures instead of rejecting", async () => {
+    await mount();
+    await act(async () => {
+      await current.generate({ text: "hello", password: "" });
+    });
+
+    expect(current.error).toBe("Could not generate the link. Please try again.");
+    expect(current.link).toBe("");
+    expect(current.busy).toBe(false);
+  });
+
+  test("clears the error when the next attempt succeeds", async () => {
+    await mount();
+    await act(async () => {
+      await current.generate({ text: "hello", password: "" });
+    });
+    await act(async () => {
+      await current.generate({ text: "hello" });
+    });
+
+    expect(current.error).toBe("");
+    expect(current.link.startsWith("https://statibin.test/create#v2.r.")).toBe(true);
   });
 });

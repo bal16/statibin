@@ -19,7 +19,7 @@ export function CreatePage({ initialText }: { initialText: string }) {
   // Mobile-only tab (PRD §5.1): below md show one panel at a time.
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   const shareRef = useRef<HTMLDivElement>(null);
-  const { generate, link, busy } = useBinGenerator();
+  const { generate, link, busy, error } = useBinGenerator();
 
   const estLen = estimateLength(text, withPassword);
   const canGenerate = text.length > 0 && estLen <= HARD_LIMIT && !busy;
@@ -93,33 +93,40 @@ export function CreatePage({ initialText }: { initialText: string }) {
       </main>
 
       <footer className="space-y-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <PayloadMeter textLength={text.length} urlLength={estimateLength(text, withPassword)} />
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={withPassword}
-              onClick={() => setWithPassword((v) => !v)}
-              className={`btn ${withPassword ? "btn-solid" : "btn-outline"}`}
-            >
-              {strings.protectWithPassword}
-            </button>
-            {withPassword && (
-              <input
-                type="password"
-                autoComplete="off"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={strings.passwordPlaceholder}
-                aria-label={strings.passwordPlaceholder}
-                className="field w-36 sm:w-44"
-              />
-            )}
-            <button onClick={onGenerate} disabled={!canGenerate} className="btn btn-solid px-5">
-              {strings.generateLink}
-            </button>
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <PayloadMeter textLength={text.length} urlLength={estimateLength(text, withPassword)} />
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={withPassword}
+                onClick={() => setWithPassword((v) => !v)}
+                className={`btn ${withPassword ? "btn-solid" : "btn-outline"}`}
+              >
+                {strings.protectWithPassword}
+              </button>
+              {withPassword && (
+                <input
+                  type="password"
+                  autoComplete="off"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={strings.passwordPlaceholder}
+                  aria-label={strings.passwordPlaceholder}
+                  className="field w-36 sm:w-44"
+                />
+              )}
+              <button onClick={onGenerate} disabled={!canGenerate} className="btn btn-solid px-5">
+                {strings.generateLink}
+              </button>
+            </div>
           </div>
+          {error && (
+            <p role="alert" className="text-sm text-danger">
+              {error}
+            </p>
+          )}
         </div>
         {link && (
           <div ref={shareRef}>
