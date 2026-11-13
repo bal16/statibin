@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { strings } from "../shared/constants/strings";
-import { HARD_LIMIT, LARGE_PREVIEW_CUTOFF } from "../features/bin/lib/fragment";
+import { HARD_LIMIT } from "../features/bin/lib/fragment";
 import { MarkdownEditor } from "../features/bin/components/MarkdownEditor";
 import { RenderedMarkdown } from "../features/bin/components/RenderedMarkdown";
 import { PayloadMeter } from "../features/bin/components/PayloadMeter";
 import { ShareCard } from "../features/bin/components/ShareCard";
 import { estimateLength } from "../features/bin/lib/utils";
 import { useBinGenerator } from "../features/bin/hooks/useBinGenerator";
+import { isPreviewGated } from "../features/bin/lib/preview";
 
 export function CreatePage({ initialText }: { initialText: string }) {
   const [text, setText] = useState(initialText);
@@ -35,10 +36,7 @@ export function CreatePage({ initialText }: { initialText: string }) {
   }, [link]);
 
   const preview = useMemo(() => <RenderedMarkdown text={text} small />, [text]);
-  // Anti-freeze: rendering megabytes of Markdown on every keystroke locks
-  // the tab. Above the cutoff the preview stays gated until the user opts
-  // in per current text (any edit re-gates automatically).
-  const previewGated = text.length > LARGE_PREVIEW_CUTOFF && previewOverride !== text;
+  const previewGated = isPreviewGated(text, previewOverride);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6">
