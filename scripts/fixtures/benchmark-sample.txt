@@ -1,0 +1,92 @@
+# Syntax Highlighting: Investigation & Decision Record
+
+**Status: UNDECIDED** — kept as `rehype-highlight` until a decision is made.
+**Date:** 2026-09-05
+**Context:** bundle warning `Some chunks are larger than 500 kB` on `bun run build`
+(`dist/assets/index-*.js` 555.76 kB min / 176.98 kB gzip).
+
+Renderer: `react-markdown` (sync) + `RenderedMarkdown.tsx`.
+Styling: custom `src/highlight.css` on `hljs-*` classes, OS-driven light/dark
+(`prefers-color-scheme`, no JS toggle).
+
+---
+
+## 1. Measured baseline (vite-bundle-visualizer, raw-data)
+
+| Contributor (rendered bytes) | Size | Note |
+|---|---|---|
+| `react-dom` (CJS prod) | ~561 KB | unavoidable base cost |
+| `highlight.js` core + **37 `common` languages** | ~78 KB + ~15–22 KB × 37 | biggest avoidable cost |
+| `hash-wasm` (argon2, wasm base64-inlined) | ~44 KB | only needed for password mode |
+| `qrcode.react` | ~45 KB | only needed when showing QR |
+| `react-markdown` ecosystem (unified, micromark, …) | ~150 KB+ | required |
+| `fflate` | ~29 KB | required |
+
+Total initial JS: **555.76 kB min / 176.98 kB gzip, single chunk + warning**.
+
+## 2. Key finding: `rehype-highlight` cannot be slimmed via options
+
+The `languages` option **exists and is documented** (readme §options,
+`Record<string, LanguageFn>`, default `common`), and `rehype-highlight@7.0.2`
+is the latest version. But it does not reduce bundle size:
+
+```js
+// node_modules/rehype-highlight/lib/index.js:30
+import {common, createLowlight} from 'lowlight'
+// ...
+const languages = settings.languages || common   // ← live reference
+```
+
+Because `common` is referenced as a runtime fallback, the bundler must keep
+all 37 language modules. Proven empirically: after passing a 13-language
+subset, `dist` still contained `php-template`, `python-repl`, `arduino`,
+`swift`, `kotlin`. They only disappeared after replacing the package.
+
+`lowlight` itself is innocent: root only re-exports (`createLowlight`,
+`common`, `all`), package is `sideEffects: false`, and its docs officially
+support `createLowlight({javascript, typescript, css})` with per-file imports
+from `highlight.js/lib/languages/*`.
+
+## 3. Alternatives comparison
+
+| Alternative | Tree-shakeable | Lang coverage | Fits sync `react-markdown` | Keeps `hljs-*` CSS / media-query dark mode | Est. cost | Verdict |
+|---|---|---|---|---|---|---|
+| `rehype-highlight` (status quo) | ❌ 37 langs pinned | 37 | ✅ drop-in | ✅ | 556 KB initial, warning | hold |
+| `lowlight` direct + 13-lang subset + ~60-line rehype adapter | ✅ | free choice | ✅ | ✅ no changes | **229 KB initial** (measured), warning gone | **recommended if optimizing** |
+| `sugar-high` (~1 KB core) | ✅ | ~11, heuristic (no bash/SQL/YAML/Markdown/JSON/XML) | ⚠️ unclear | ❌ rewrite CSS | tiny but too narrow | reject |
+| Shiki (`core` + JS engine + precompiled langs) | ✅ | broad, VS Code-grade | ⚠️ needs `createHighlighterCoreSync` boilerplate | ❌ inline styles break media-query dark mode | 2–3× hljs-subset | reject for MVP |
+| `refractor` (Prism) | ✅ | broad | ⚠️ needs another adapter + Prism theme | ❌ rewrite CSS | lateral, no net win | reject |
+
+Reference numbers (chsm.dev, Jan 2025): hljs core+TS ≈ 36 KB raw / 16 KB gzip;
+Shiki core 88 KB + Oniguruma WASM 622 KB (231 KB gzip) + TSX grammar 185 KB.
+
+The reverted prototype (never committed) combined: lowlight-subset +
+dynamic `import('hash-wasm')` in `password.ts` (→ 28 KB lazy chunk) +
+`manualChunks` function-form for `vendor-react` (array shorthand silently
+missed the CJS `react-dom`). Result: index 229 KB + vendor 192 KB, no warning,
+`bun test` 23/23 green at the time.
+
+## 4. Tradeoffs
+
+**Staying (`rehype-highlight`, 37 langs):**
+- (+) Zero migration risk, drop-in, auto-detect available if ever needed.
+- (−) ~325 KB dead weight on every first load; warning noise on every build;
+  contradicts the project's lean/static ethos.
+
+**Migrating (direct `lowlight`, 13 langs):**
+- (+) −59% initial JS, warning gone, free choice of languages, same CSS.
+- (−) ~60 lines of adapter become ours to maintain (visit `pre>code`,
+  `language-*` parsing, unknown-language fallback); new languages need a
+  one-line import instead of working automatically; adapter needs its own
+  unit tests (hast-level, no new deps — pattern already proven).
+
+**Shiki later:**
+- Consider only if paste quality demands VS Code-grade accuracy (e.g. heavy
+  Rust/Go pastes) AND the project accepts async init + dark-mode rework.
+  Explicitly post-MVP.
+
+## 5. Decision
+
+**Deferred.** Revisit when: (a) bundle budget is enforced (e.g. CI gate),
+(b) highlighting quality complaints arrive, or (c) the `common` set grows.
+Default action on revisit: re-apply the direct-`lowlight` prototype.

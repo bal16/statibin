@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "test": "bun test",
     "coverage": "bun test --coverage",
+    "bench": "bun scripts/bench-compress.ts",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
