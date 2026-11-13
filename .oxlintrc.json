@@ -11,5 +11,55 @@
   },
   "rules": {
     "react/exhaustive-deps": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/shared/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/app/**", "**/pages/**", "**/features/**"],
+                "message": "shared must stay independent: it may not import app, pages or features"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/features/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/app/**", "**/pages/**"],
+                "message": "a feature may not depend on pages or app; compose it from a page instead"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/pages/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/app/**"],
+                "message": "a page may not depend on app; app composes pages"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
