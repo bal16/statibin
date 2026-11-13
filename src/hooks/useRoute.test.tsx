@@ -42,14 +42,25 @@ function Probe({ onRoute }: { onRoute: (r: Route) => void }) {
   return null;
 }
 
-function fireHashChange() {
-  window.dispatchEvent(new window.Event("hashchange"));
+// happy-dom's `location.hash` setter does not dispatch `hashchange`
+// synchronously: it debounces the event onto a timer. Awaiting one tick inside
+// act() lets that event (and the React update it causes) land while act() is
+// still collecting work. Without this, the update escapes act() and React logs
+// "An update to Probe inside a test was not wrapped in act(...)".
+async function setHash(hash: string) {
+  await act(async () => {
+    window.location.hash = hash;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
 }
 
 let root: Root | null = null;
 let container: HTMLElement | null = null;
 
 afterEach(async () => {
+  // Flush any queued hashchange before unmounting, so it cannot fire while the
+  // next test is mounting. (A no-op assignment when the hash is already "".)
+  await setHash("");
   if (root) {
     await act(async () => {
       root?.unmount();
@@ -58,7 +69,6 @@ afterEach(async () => {
   }
   container?.remove();
   container = null;
-  window.location.hash = "";
 });
 
 async function mountProbe(seen: Array<Route>) {
@@ -71,39 +81,33 @@ async function mountProbe(seen: Array<Route>) {
 }
 
 describe("getRoute", () => {
-  test("empty hash means create", () => {
-    window.location.hash = "";
+  test("empty hash means create", async () => {
+    await setHash("");
     expect(getRoute()).toEqual({ name: "create" });
   });
 
-  test("non-empty hash means view with the raw hash", () => {
-    window.location.hash = "#v1.r.a.b.c";
+  test("non-empty hash means view with the raw hash", async () => {
+    await setHash("#v1.r.a.b.c");
     expect(getRoute()).toEqual({ name: "view", hash: "#v1.r.a.b.c" });
   });
 });
 
 describe("useRoute", () => {
   test("starts on create and follows hash changes", async () => {
-    window.location.hash = "";
+    await setHash("");
     const seen: Array<Route> = [];
     await mountProbe(seen);
     expect(seen.at(-1)).toEqual({ name: "create" });
 
-    window.location.hash = "#v1.p.salt.iv.ct";
-    await act(async () => {
-      fireHashChange();
-    });
+    await setHash("#v1.p.salt.iv.ct");
     expect(seen.at(-1)).toEqual({ name: "view", hash: "#v1.p.salt.iv.ct" });
 
-    window.location.hash = "";
-    await act(async () => {
-      fireHashChange();
-    });
+    await setHash("");
     expect(seen.at(-1)).toEqual({ name: "create" });
   });
 
   test("starts directly on view when loaded with a hash", async () => {
-    window.location.hash = "#v1.r.k.iv.ct";
+    await setHash("#v1.r.k.iv.ct");
     const seen: Array<Route> = [];
     await mountProbe(seen);
     expect(seen.at(-1)).toEqual({ name: "view", hash: "#v1.r.k.iv.ct" });
