@@ -22,7 +22,10 @@ export function CreatePage({ initialText }: { initialText: string }) {
   const { generate, link, busy, error } = useBinGenerator();
 
   const estLen = estimateLength(text, withPassword);
-  const canGenerate = text.length > 0 && estLen <= HARD_LIMIT && !busy;
+  // An empty password still selects password mode, and the KDF rejects it, so
+  // keep the action disabled until the user types one.
+  const canGenerate =
+    text.length > 0 && estLen <= HARD_LIMIT && !busy && (!withPassword || password.length > 0);
 
   const onGenerate = useCallback(() => {
     void generate({ text, password: withPassword ? password : undefined });
