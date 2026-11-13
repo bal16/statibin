@@ -12,6 +12,7 @@
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
+    "check": "tsc -b && oxlint && oxfmt --check && bun test && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

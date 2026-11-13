@@ -5,4 +5,9 @@ coverageDir = "./coverage"
 coverageSkipTestFiles = true
 coverageThreshold = { lines = 0.9, functions = 0.9 }
 # UI entry points are covered by component tests (future), not unit tests.
-coveragePathIgnorePatterns = ["src/main.tsx", "src/App.tsx", "src/components/**"]
+coveragePathIgnorePatterns = [
+  "src/main.tsx",
+  "src/app/App.tsx",
+  "src/pages/**",
+  "src/features/bin/components/**",
+]
