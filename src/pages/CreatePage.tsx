@@ -1,40 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { strings } from "../shared/constants/strings";
 import { HARD_LIMIT, LARGE_PREVIEW_CUTOFF } from "../features/bin/lib/fragment";
-import { encodeRandom, encodeWithPassword } from "../features/bin/lib/fragment";
 import { MarkdownEditor } from "../features/bin/components/MarkdownEditor";
 import { RenderedMarkdown } from "../features/bin/components/RenderedMarkdown";
 import { PayloadMeter } from "../features/bin/components/PayloadMeter";
 import { ShareCard } from "../features/bin/components/ShareCard";
 import { estimateLength } from "../features/bin/lib/utils";
+import { useBinGenerator } from "../features/bin/hooks/useBinGenerator";
 
 export function CreatePage({ initialText }: { initialText: string }) {
   const [text, setText] = useState(initialText);
   const [withPassword, setWithPassword] = useState(false);
   const [password, setPassword] = useState("");
-  const [link, setLink] = useState("");
-  const [busy, setBusy] = useState(false);
   // Snapshot of the text the user explicitly allowed to render above the
   // preview cutoff. Compared by reference: any edit re-gates the preview.
   const [previewOverride, setPreviewOverride] = useState("");
   // Mobile-only tab (PRD §5.1): below md show one panel at a time.
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   const shareRef = useRef<HTMLDivElement>(null);
+  const { generate, link, busy } = useBinGenerator();
 
   const estLen = estimateLength(text, withPassword);
   const canGenerate = text.length > 0 && estLen <= HARD_LIMIT && !busy;
 
-  const onGenerate = useCallback(async () => {
-    setBusy(true);
-    try {
-      const frag = withPassword
-        ? await encodeWithPassword(text, password)
-        : await encodeRandom(text);
-      setLink(window.location.origin + window.location.pathname + frag);
-    } finally {
-      setBusy(false);
-    }
-  }, [text, withPassword, password]);
+  const onGenerate = useCallback(() => {
+    void generate({ text, password: withPassword ? password : undefined });
+  }, [generate, text, withPassword, password]);
 
   // The result is announced by scrolling to the share card itself —
   // never by a magic scrollTo number (layout is not a fixed height).
