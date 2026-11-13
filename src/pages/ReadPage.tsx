@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { strings } from "../strings";
-import { decodeRandom, decodeWithPassword, KDF_FAILED, parseFragment } from "../lib/fragment";
-import { RenderedMarkdown } from "../components/RenderedMarkdown";
+import { strings } from "../shared/constants/strings";
+import {
+  decodeRandom,
+  decodeWithPassword,
+  KDF_FAILED,
+  parseFragment,
+} from "../features/bin/lib/fragment";
+import { RenderedMarkdown } from "../features/bin/components/RenderedMarkdown";
 
 export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string) => void }) {
   const parsed = useMemo(() => parseFragment(hash), [hash]);

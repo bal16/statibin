@@ -1,4 +1,4 @@
-import { strings } from "../strings";
+import { strings } from "../../../shared/constants/strings";
 import { HARD_LIMIT, WARN_START } from "../lib/fragment";
 
 export function PayloadMeter({ textLength, urlLength }: { textLength: number; urlLength: number }) {

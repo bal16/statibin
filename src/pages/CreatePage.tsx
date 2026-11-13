@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { strings } from "../strings";
-import { HARD_LIMIT, LARGE_PREVIEW_CUTOFF } from "../lib/fragment";
-import { encodeRandom, encodeWithPassword } from "../lib/fragment";
-import { MarkdownEditor } from "../components/MarkdownEditor";
-import { RenderedMarkdown } from "../components/RenderedMarkdown";
-import { PayloadMeter } from "../components/PayloadMeter";
-import { ShareCard } from "../components/ShareCard";
-import { estimateLength } from "../lib/utils";
+import { strings } from "../shared/constants/strings";
+import { HARD_LIMIT, LARGE_PREVIEW_CUTOFF } from "../features/bin/lib/fragment";
+import { encodeRandom, encodeWithPassword } from "../features/bin/lib/fragment";
+import { MarkdownEditor } from "../features/bin/components/MarkdownEditor";
+import { RenderedMarkdown } from "../features/bin/components/RenderedMarkdown";
+import { PayloadMeter } from "../features/bin/components/PayloadMeter";
+import { ShareCard } from "../features/bin/components/ShareCard";
+import { estimateLength } from "../features/bin/lib/utils";
 
 export function CreatePage({ initialText }: { initialText: string }) {
   const [text, setText] = useState(initialText);

@@ -1,7 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
-import { strings } from "../strings";
+import { strings } from "../../../shared/constants/strings";
 import { QR_LIMIT } from "../lib/fragment";
-import { copyToClipboard } from "../lib/clipboard";
+import { copyToClipboard } from "../../../shared/lib/clipboard";
 
 // QR generation is only needed once a link exists and the user opens the
 // dialog, so keep the encoder out of the initial bundle.

@@ -3,7 +3,7 @@
 // never reach into the textarea internals. Migrating to CodeMirror 6
 // or Milkdown later means replacing the INSIDE of this file only.
 
-import { strings } from "../strings";
+import { strings } from "../../../shared/constants/strings";
 
 interface MarkdownEditorProps {
   value: string;

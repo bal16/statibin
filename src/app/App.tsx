@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useRoute } from "./hooks/useRoute";
-import { CreatePage } from "./screens/CreatePage";
-import { ReadPage } from "./screens/ReadPage";
+import { CreatePage } from "../pages/CreatePage";
+import { ReadPage } from "../pages/ReadPage";
 
 export default function App() {
   const route = useRoute();
