@@ -4,7 +4,7 @@ import { useBinReader } from "../features/bin/hooks/useBinReader";
 import { RenderedMarkdown } from "../features/bin/components/RenderedMarkdown";
 
 export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string) => void }) {
-  const { status, text, createdAt, error, unlock } = useBinReader(hash);
+  const { status, text, createdAt, error, unlockError, unlock } = useBinReader(hash);
   const [password, setPassword] = useState("");
 
   const onUnlock = useCallback(async () => {
@@ -42,9 +42,9 @@ export function ReadPage({ hash, onFork }: { hash: string; onFork: (text: string
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="field w-full"
-              aria-invalid={!!error}
+              aria-invalid={!!unlockError}
             />
-            {error && <p className="text-sm text-danger">{error}</p>}
+            {unlockError && <p className="text-sm text-danger">{unlockError}</p>}
           </label>
           <button type="submit" className="btn btn-solid w-full">
             {strings.unlock}

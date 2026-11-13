@@ -71,6 +71,12 @@ async function mount(hash: string) {
   });
 }
 
+async function rerender(hash: string) {
+  await act(async () => {
+    root?.render(<Probe hash={hash} />);
+  });
+}
+
 async function settle() {
   for (let i = 0; i < 50 && current.status === "loading"; i++) await flush();
 }
@@ -121,7 +127,7 @@ describe("useBinReader", () => {
     expect(current.error).toBe("This link looks incomplete or corrupted.");
   });
 
-  test("reports a wrong password while unlocking", async () => {
+  test("reports a wrong password without leaving the unlock form", async () => {
     const frag = await encodeWithPassword("classified", "s3cret");
     await mount(frag);
 
@@ -129,8 +135,39 @@ describe("useBinReader", () => {
       await current.unlock("wrong");
     });
 
-    expect(current.status).toBe("error");
-    expect(current.error).toBe("Wrong password or corrupted link.");
+    expect(current.status).toBe("locked");
+    expect(current.error).toBe("");
+    expect(current.unlockError).toBe("Wrong password or corrupted link.");
+  });
+
+  test("clears the unlock error once the right password is used", async () => {
+    const frag = await encodeWithPassword("classified", "s3cret");
+    await mount(frag);
+
+    await act(async () => {
+      await current.unlock("wrong");
+    });
+    await act(async () => {
+      await current.unlock("s3cret");
+    });
+
+    expect(current.status).toBe("ready");
+    expect(current.unlockError).toBe("");
+    expect(current.text).toBe("classified");
+  });
+
+  test("drops the previous paste when the hash changes", async () => {
+    const first = await encodeRandom("first paste");
+    await mount(first);
+    await settle();
+    expect(current.status).toBe("ready");
+
+    const second = await encodeWithPassword("second paste", "pw");
+    await rerender(second);
+
+    expect(current.status).toBe("locked");
+    expect(current.text).toBe("");
+    expect(current.error).toBe("");
   });
 
   test("reports an incomplete link as a fatal error", async () => {

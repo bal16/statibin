@@ -12,6 +12,6 @@ export default function App() {
     window.location.hash = "";
   }, []);
 
-  if (route.name === "view") return <ReadPage hash={route.hash} onFork={onFork} />;
+  if (route.name === "view") return <ReadPage key={route.hash} hash={route.hash} onFork={onFork} />;
   return <CreatePage key={forkText} initialText={forkText} />;
 }
